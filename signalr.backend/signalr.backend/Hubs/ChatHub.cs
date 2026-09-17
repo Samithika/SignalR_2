@@ -39,8 +39,13 @@ namespace signalr.backend.Hubs
         public async override Task OnConnectedAsync()
         {
             UserHandler.UserConnections.Add(CurentUser.Email!, Context.UserIdentifier);
-            
+
             // TODO: Envoyer des message aux clients pour les mettre à jour
+
+            // envoyer aux clients liste de users connectés
+            await Clients.All.SendAsync("UsersList", UserHandler.UserConnections.ToList());
+            // envoyer aux clients liste de channels
+            await Clients.All.SendAsync("ChannelsList", _context.Channel.ToList());
         }
 
         public async override Task OnDisconnectedAsync(Exception? exception)
@@ -48,8 +53,9 @@ namespace signalr.backend.Hubs
             // Lors de la fermeture de la connexion, on met à jour notre dictionnary d'utilisateurs connectés
             KeyValuePair<string, string> entrie = UserHandler.UserConnections.SingleOrDefault(uc => uc.Value == Context.UserIdentifier);
             UserHandler.UserConnections.Remove(entrie.Key);
-            
+
             // TODO: Envoyer un message aux clients pour les mettre à jour
+            await Clients.All.SendAsync("UsersList", UserHandler.UserConnections.ToList());
         }
 
         public async Task CreateChannel(string title)
