@@ -40,6 +40,9 @@ export default function ChatComponent({ hubConnection }: ChatComponentProps) {
     });
 
     // TODO: Écouter le message pour quitter un channel (lorsque le channel est effacé)
+    hubConnection.on("LeaveChannel", data =>{
+      setSelectedChannel(null)
+    })
 
     return () => {
       hubConnection.off('UsersList');
@@ -80,6 +83,8 @@ export default function ChatComponent({ hubConnection }: ChatComponentProps) {
 
   function deleteChannel(channel: Channel) {
     // TODO: Ajouter un invoke pour supprimer un canal
+    if (!hubConnection) return;
+    hubConnection?.invoke("DeleteChannel", channel.id)
   }
 
   function leaveChannel() {
