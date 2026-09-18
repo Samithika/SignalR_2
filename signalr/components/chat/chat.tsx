@@ -41,7 +41,8 @@ export default function ChatComponent({ hubConnection }: ChatComponentProps) {
 
     // TODO: Écouter le message pour quitter un channel (lorsque le channel est effacé)
     hubConnection.on("LeaveChannel", data =>{
-      setSelectedChannel(null)
+      console.log(data)
+      setSelectedChannel(null);
     })
 
     return () => {
@@ -78,6 +79,10 @@ export default function ChatComponent({ hubConnection }: ChatComponentProps) {
   function createChannel(e: React.FormEvent) {
     e.preventDefault();
     // TODO: Ajouter un invoke pour créer un canal
+    if (!hubConnection || !newChannelName.trim())
+      return
+
+    hubConnection.invoke("CreateChannel", newChannelName);
     setNewChannelName('');
   }
 
