@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using signalr.backend.Data;
 using signalr.backend.Models;
+using signalr.backend.Services;
 
 namespace signalr.backend.Hubs
 {
@@ -20,6 +21,7 @@ namespace signalr.backend.Hubs
     public class ChatHub : Hub
     {
         public ApplicationDbContext _context;
+        private MonBackgroundService _monBackgroundService;
 
         public IdentityUser CurentUser
         {
@@ -31,9 +33,10 @@ namespace signalr.backend.Hubs
             }
         }
 
-        public ChatHub(ApplicationDbContext context)
+        public ChatHub(ApplicationDbContext context, MonBackgroundService monBackgroundService)
         {
             _context = context;
+            _monBackgroundService = monBackgroundService;
         }
 
         public async override Task OnConnectedAsync()
@@ -112,6 +115,12 @@ namespace signalr.backend.Hubs
             {
                 var newChannel = await _context.Channel.FindAsync(newChannelId);
                 await Clients.Group(newGroupName).SendAsync("NewMessage", userTag + " a rejoint : " + newChannel.Title);
+
+                var maxNbMessages = await _context.Channel.MaxAsync(c => c.NbMessages);
+                if (newChannel.NbMessages == maxNbMessages)
+                {
+                    await _monBackgroundService.SendMessageToUsers(newChannel);
+                }
             }
         }
 
@@ -127,6 +136,10 @@ namespace signalr.backend.Hubs
             {
                 // TODO: Envoyer le message aux utilisateurs connectés à ce canal
                 string channelGroupName = CreateChannelGroupName(channelId);
+                Channel channel = await _context.Channel.FindAsync(channelId);
+                channel!.NbMessages++;
+
+                await _context.SaveChangesAsync();
                 await Clients.Group(channelGroupName).SendAsync("NewMessage", (userTag + " " + message));
             }
             else

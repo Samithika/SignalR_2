@@ -14,14 +14,18 @@ export default function Home() {
 
   const [hubConnection, setHubConnection] = useState<HubConnection | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  
+
 
   function connectToHub() {
     const newHubConnection = new HubConnectionBuilder()
-                              .withUrl(hubUrl, { accessTokenFactory: () => sessionStorage.getItem("token")! })
-                              .withAutomaticReconnect()
-                              .configureLogging(LogLevel.Information)
-                              .build();
+      .withUrl(hubUrl, { accessTokenFactory: () => sessionStorage.getItem("token")! })
+      .withAutomaticReconnect()
+      .configureLogging(LogLevel.Information)
+      .build();
+
+    newHubConnection.on("MostPopularChannel", (msg : string) => {
+      alert(msg)
+    })
 
     newHubConnection
       .start()
@@ -36,15 +40,15 @@ export default function Home() {
 
   function logout() {
     console.log("L'utilisateur se déconnecte, on arrête le HubConnection");
-    if(hubConnection){
+    if (hubConnection) {
       hubConnection.stop();
       setHubConnection(null);
     }
     setIsConnected(false);
   }
 
-  function RenderContent(){
-    if(!isConnected){
+  function RenderContent() {
+    if (!isConnected) {
       return (
         <div>
           <div >Pas connecté au Hub..</div>
@@ -53,7 +57,7 @@ export default function Home() {
         </div>
       );
     }
-    else{
+    else {
       return (
         <div>
           <div>Connecté!</div>
